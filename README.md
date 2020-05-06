@@ -57,3 +57,12 @@ The next steps I like to complete are:
     Wrap the application in a docker image which can be published
     Automate data being loaded using the generator using python scripts to allow this to be run locally with 'live' data.
     It is a good idea to have a visualisation of the stream, at the moment this is output in to the console logs.  This should be saved to file to allow it to be run through a kafka visualisation tool.  This will also aid debugging vis KSQL as the aggregate name will be stored and thus queried.
+
+## Limitations
+
+The following items will need to be investigated the design changed:
+Keys: either the data is processed through a different stream to add keys or the code needs to be changed so that the data can be processed over multiple partitions.
+Transformers vs Aggregates: By adding a second Transformers the data would no longer be required to be aggregated in the stream.  Oversized aggregates can cause issues which are hard to diagnose as they are not idempotent.  The first transformer would act as a global KTable so accessible across partitions.  This would mean the second state store could hold the current stats which could be displayed in real time.
+Fanning out: the current design stores every record per minute every time, this will increment in the amount of data over time and processing delays.  By only saving changes by making the suggested change by adding a second key store this should allow only updated records to be saved.  This will still be a snapshot but only one record being updated at any time.
+Topic retention: as these are snapshots the topic retention should be set to only save the last record.
+
